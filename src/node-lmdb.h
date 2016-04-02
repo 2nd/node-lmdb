@@ -207,65 +207,6 @@ public:
     */
     static NAN_METHOD(renew);
 
-    /*
-        Gets string data (JavaScript string type) associated with the given key from a database. You need to open a database in the environment to use this.
-        This method is zero-copy and the return value can only be used until the next put operation or until the transaction is committed or aborted.
-        (Wrapper for `mdb_get`)
-
-        Parameters:
-
-        * database instance created with calling `openDbi()` on an `Env` instance
-        * key for which the value is retrieved
-    */
-    static NAN_METHOD(getString);
-
-    /*
-        Gets binary data (Node.js Buffer) associated with the given key from a database. You need to open a database in the environment to use this.
-        This method is zero-copy and the return value can only be used until the next put operation or until the transaction is committed or aborted.
-        (Wrapper for `mdb_get`)
-
-        Parameters:
-
-        * database instance created with calling `openDbi()` on an `Env` instance
-        * key for which the value is retrieved
-    */
-    static NAN_METHOD(getBinary);
-
-    /*
-        Gets number data (JavaScript number type) associated with the given key from a database. You need to open a database in the environment to use this.
-        This method will copy the value out of the database.
-        (Wrapper for `mdb_get`)
-
-        Parameters:
-
-        * database instance created with calling `openDbi()` on an `Env` instance
-        * key for which the value is retrieved
-    */
-    static NAN_METHOD(getNumber);
-
-    /*
-        Gets boolean data (JavaScript boolean type) associated with the given key from a database. You need to open a database in the environment to use this.
-        This method will copy the value out of the database.
-        (Wrapper for `mdb_get`)
-
-        Parameters:
-
-        * database instance created with calling `openDbi()` on an `Env` instance
-        * key for which the value is retrieved
-    */
-    static NAN_METHOD(getBoolean);
-
-    /*
-        Puts string data (JavaScript string type) into a database.
-        (Wrapper for `mdb_put`)
-
-        Parameters:
-
-        * database instance created with calling `openDbi()` on an `Env` instance
-        * key for which the value is stored
-        * data to store for the given key
-    */
-    static NAN_METHOD(putString);
 
     /*
         Puts binary data (Node.js Buffer) into a database.
@@ -278,39 +219,6 @@ public:
         * data to store for the given key
     */
     static NAN_METHOD(putBinary);
-
-    /*
-        Puts number data (JavaScript number type) into a database.
-        (Wrapper for `mdb_put`)
-
-        Parameters:
-
-        * database instance created with calling `openDbi()` on an `Env` instance
-        * key for which the value is stored
-        * data to store for the given key
-    */
-    static NAN_METHOD(putNumber);
-
-    /*
-        Puts boolean data (JavaScript boolean type) into a database.
-        (Wrapper for `mdb_put`)
-
-        Parameters:
-
-        * database instance created with calling `openDbi()` on an `Env` instance
-        * key for which the value is stored
-        * data to store for the given key
-    */
-    static NAN_METHOD(putBoolean);
-
-    /*
-        Deletes data with the given key from the database.
-        (Wrapper for `mdb_del`)
-
-        * database instance created with calling `openDbi()` on an `Env` instance
-        * key for which the value is stored
-    */
-    static NAN_METHOD(del);
 };
 
 /*

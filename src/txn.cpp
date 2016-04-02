@@ -135,142 +135,31 @@ NAN_METHOD(TxnWrap::renew) {
     return;
 }
 
-Nan::NAN_METHOD_RETURN_TYPE TxnWrap::getCommon(Nan::NAN_METHOD_ARGS_TYPE info, Local<Value> (*successFunc)(MDB_val&)) {
-    Nan::HandleScope scope;
-
-    TxnWrap *tw = Nan::ObjectWrap::Unwrap<TxnWrap>(info.This());
-    DbiWrap *dw = Nan::ObjectWrap::Unwrap<DbiWrap>(info[0]->ToObject());
-
-    if (!tw->txn) {
-        return Nan::ThrowError("The transaction is already closed.");
-    }
-
-    MDB_val key, data;
-    void (*freeKey)(MDB_val&) = argToKey(info[1], key, dw->keyIsUint32);
-    if (!freeKey) {
-        return;
-    }
-
-    int rc = mdb_get(tw->txn, dw->dbi, &key, &data);
-    freeKey(key);
-
-    if (rc == MDB_NOTFOUND) {
-        return info.GetReturnValue().Set(Nan::Null());
-    }
-    else if (rc != 0) {
-        return Nan::ThrowError(mdb_strerror(rc));
-    }
-    else {
-      return info.GetReturnValue().Set(successFunc(data));
-    }
-}
-
-NAN_METHOD(TxnWrap::getString) {
-    return getCommon(info, valToString);
-}
-
-NAN_METHOD(TxnWrap::getBinary) {
-    return getCommon(info, valToBinary);
-}
-
-NAN_METHOD(TxnWrap::getNumber) {
-    return getCommon(info, valToNumber);
-}
-
-NAN_METHOD(TxnWrap::getBoolean) {
-    return getCommon(info, valToBoolean);
-}
-
-Nan::NAN_METHOD_RETURN_TYPE TxnWrap::putCommon(Nan::NAN_METHOD_ARGS_TYPE info, void (*fillFunc)(Nan::NAN_METHOD_ARGS_TYPE info, MDB_val&), void (*freeData)(MDB_val&)) {
-    Nan::HandleScope scope;
-
-    TxnWrap *tw = Nan::ObjectWrap::Unwrap<TxnWrap>(info.This());
-    DbiWrap *dw = Nan::ObjectWrap::Unwrap<DbiWrap>(info[0]->ToObject());
-
-    if (!tw->txn) {
-        return Nan::ThrowError("The transaction is already closed.");
-    }
-
-    int flags = 0;
-    MDB_val key, data;
-
-    void (*freeKey)(MDB_val&) = argToKey(info[1], key, dw->keyIsUint32);
-    if (!freeKey) {
-        return;
-    }
-
-    fillFunc(info, data);
-
-    int rc = mdb_put(tw->txn, dw->dbi, &key, &data, flags);
-    freeKey(key);
-    freeData(data);
-
-    if (rc != 0) {
-        return Nan::ThrowError(mdb_strerror(rc));
-    }
-
-    return;
-}
-
-NAN_METHOD(TxnWrap::putString) {
-    return putCommon(info, [](Nan::NAN_METHOD_ARGS_TYPE info, MDB_val &data) -> void {
-        CustomExternalStringResource::writeTo(info[2]->ToString(), &data);
-    }, [](MDB_val &data) -> void {
-        delete[] (uint16_t*)data.mv_data;
-    });
-}
 
 NAN_METHOD(TxnWrap::putBinary) {
-    return putCommon(info, [](Nan::NAN_METHOD_ARGS_TYPE info, MDB_val &data) -> void {
-        data.mv_size = node::Buffer::Length(info[2]);
-        data.mv_data = node::Buffer::Data(info[2]);
-    }, [](MDB_val &) -> void {
-        // I think the data is owned by the node::Buffer so we don't need to free it - need to clarify
-    });
-}
+  Nan::HandleScope scope;
 
-NAN_METHOD(TxnWrap::putNumber) {
-    return putCommon(info, [](Nan::NAN_METHOD_ARGS_TYPE info, MDB_val &data) -> void {
-        data.mv_size = sizeof(double);
-        data.mv_data = new double;
-        *((double*)data.mv_data) = info[2]->ToNumber()->Value();
-    }, [](MDB_val &data) -> void {
-        delete (double*)data.mv_data;
-    });
-}
+  TxnWrap *tw = Nan::ObjectWrap::Unwrap<TxnWrap>(info.This());
+  DbiWrap *dw = Nan::ObjectWrap::Unwrap<DbiWrap>(info[0]->ToObject());
 
-NAN_METHOD(TxnWrap::putBoolean) {
-    return putCommon(info, [](Nan::NAN_METHOD_ARGS_TYPE info, MDB_val &data) -> void {
-        data.mv_size = sizeof(double);
-        data.mv_data = new bool;
-        *((bool*)data.mv_data) = info[2]->ToBoolean()->Value();
-    }, [](MDB_val &data) -> void {
-        delete (bool*)data.mv_data;
-    });
-}
+  if (!tw->txn) {
+      return Nan::ThrowError("The transaction is already closed.");
+  }
 
-NAN_METHOD(TxnWrap::del) {
-    Nan::HandleScope scope;
+  int flags = 0;
+  MDB_val key, data;
 
-    TxnWrap *tw = Nan::ObjectWrap::Unwrap<TxnWrap>(info.This());
-    DbiWrap *dw = Nan::ObjectWrap::Unwrap<DbiWrap>(info[0]->ToObject());
+  key.mv_size = node::Buffer::Length(info[1]);
+  key.mv_data = node::Buffer::Data(info[1]);
 
-    if (!tw->txn) {
-        return Nan::ThrowError("The transaction is already closed.");
-    }
+  data.mv_size = node::Buffer::Length(info[2]);
+  data.mv_data = node::Buffer::Data(info[2]);
 
-    MDB_val key;
-    void (*freeKey)(MDB_val&) = argToKey(info[1], key, dw->keyIsUint32);
-    if (!freeKey) {
-        return;
-    }
+  int rc = mdb_put(tw->txn, dw->dbi, &key, &data, flags);
 
-    int rc = mdb_del(tw->txn, dw->dbi, &key, nullptr);
-    freeKey(key);
+  if (rc != 0) {
+      return Nan::ThrowError(mdb_strerror(rc));
+  }
 
-    if (rc != 0) {
-        return Nan::ThrowError(mdb_strerror(rc));
-    }
-
-    return;
+  return;
 }
